@@ -1094,6 +1094,120 @@
     .sidebar-section:nth-child(8)  { animation-delay: 0.40s; }
     .sidebar-section:nth-child(9)  { animation-delay: 0.45s; }
     .sidebar-section:nth-child(10) { animation-delay: 0.50s; }
+
+    /* ─── QC COMPARISON VIEW ─── */
+    .summary-box { max-height: 92vh; }
+    .summary-list-wrap { max-height: 340px; }
+
+    .summary-list-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface-0);
+      flex-shrink: 0;
+    }
+    .summary-list-count {
+      font-size: 9px; color: var(--text-dim);
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .summary-view-toggle { display: flex; gap: 3px; }
+    .summary-view-btn {
+      padding: 4px 9px;
+      background: transparent;
+      border: 1px solid #333; border-radius: 3px;
+      color: var(--text-muted); font-family: var(--font-ui);
+      font-size: 10px; cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
+      transition: all 0.15s; letter-spacing: 0.04em;
+    }
+    .summary-view-btn.active {
+      background: var(--surface-3);
+      color: var(--text); border-color: #555;
+    }
+    .summary-view-btn:hover:not(.active) { background: var(--surface-2); }
+
+    /* QC rows */
+    .qc-row {
+      display: grid;
+      grid-template-columns: 1fr 52px 1fr;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-1);
+      transition: background 0.15s, box-shadow 0.15s;
+      cursor: default;
+    }
+    .qc-row:last-child { border-bottom: none; }
+    .qc-row:hover {
+      background: var(--surface-2);
+      box-shadow: inset 0 0 0 1px var(--accent-border);
+    }
+    .qc-thumb-block { display: flex; flex-direction: column; gap: 4px; }
+    .qc-thumb-label {
+      font-size: 8px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .qc-thumb-wrap {
+      position: relative;
+      border-radius: 3px;
+      overflow: hidden;
+      background: #080808;
+      height: 80px;
+    }
+    .qc-thumb-wrap img {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+    }
+    .qc-thumb-size {
+      font-size: 9px; font-weight: 500;
+      color: var(--text-muted);
+    }
+    .qc-thumb-size.saved { color: #5CB85C; }
+
+    /* Loupe */
+    .qc-loupe-circle {
+      position: absolute;
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      border: 1.5px solid var(--accent);
+      box-shadow: 0 0 0 1.5px rgba(0,0,0,0.9), 0 4px 20px rgba(0,0,0,0.8);
+      pointer-events: none;
+      display: none;
+      z-index: 10;
+      transform: translate(-50%, -50%);
+      background-repeat: no-repeat;
+    }
+    .qc-thumb-wrap:hover .qc-loupe-circle { display: block; }
+
+    /* Arrow column */
+    .qc-arrow-col {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 3px; padding: 0 6px;
+    }
+    .qc-savings-pct {
+      font-size: 11px; font-weight: 700; color: var(--accent);
+    }
+    .qc-savings-pct.neutral { color: var(--text-muted); font-size: 9px; }
+    .qc-arrow-svg { color: var(--accent); opacity: 0.65; }
+
+    /* Lazy placeholder */
+    .qc-thumb-placeholder {
+      width: 100%; height: 80px;
+      background: #1A1A1A; border-radius: 3px;
+      position: relative; overflow: hidden;
+    }
+    .qc-thumb-placeholder::after {
+      content: ''; position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+      animation: qc-shimmer 1.4s ease-in-out infinite;
+    }
+    @keyframes qc-shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
   </style>
 </head>
 <body>
@@ -1533,6 +1647,19 @@
         <div class="summary-stat-sub" id="summary-quality-sub">q=85</div>
       </div>
     </div>
+    <div class="summary-list-header">
+      <span class="summary-list-count" id="summary-list-count"></span>
+      <div class="summary-view-toggle">
+        <button class="summary-view-btn active" id="btn-view-list">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          List
+        </button>
+        <button class="summary-view-btn" id="btn-view-qc">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><line x1="3" y1="12" x2="21" y2="12" stroke-dasharray="3 2"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          QC View
+        </button>
+      </div>
+    </div>
     <div class="summary-list-wrap" id="summary-list"></div>
     <div class="summary-footer">
       <button class="summary-btn-dl" id="btn-summary-dl">
@@ -1698,6 +1825,9 @@ const D = {
   summaryFormat:    $('summary-format'),
   summaryQualitySub: $('summary-quality-sub'),
   summaryList:      $('summary-list'),
+  summaryListCount: $('summary-list-count'),
+  btnViewList:      $('btn-view-list'),
+  btnViewQc:        $('btn-view-qc'),
   btnSummaryDl:     $('btn-summary-dl'),
   btnNewBatch:      $('btn-new-batch'),
 
@@ -2319,16 +2449,126 @@ function showSummaryModal(stats) {
   D.summaryFormat.textContent     = stats.format.toUpperCase();
   D.summaryQualitySub.textContent = stats.format === 'png' ? 'lossless' : 'q=' + stats.quality;
 
-  const checkIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
-  D.summaryList.innerHTML = '';
-  stats.fileResults.forEach(f => {
-    const row = document.createElement('div');
-    row.className = 'summary-file-row ' + f.status;
-    row.innerHTML = `<span class="summary-file-status">${checkIcon}</span>
-      <span class="summary-file-name">${f.name}</span>
-      <span class="summary-file-size">${formatBytes(f.size)}</span>`;
-    D.summaryList.appendChild(row);
-  });
+  // ── list count label
+  D.summaryListCount.textContent = stats.fileResults.length + ' files';
+
+  // ── view toggle state
+  let currentView = 'list';
+  let qcObserver = null;
+
+  function renderList() {
+    if (qcObserver) { qcObserver.disconnect(); qcObserver = null; }
+    const checkIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+    D.summaryList.innerHTML = '';
+    stats.fileResults.forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'summary-file-row ' + f.status;
+      row.innerHTML = `<span class="summary-file-status">${checkIcon}</span>
+        <span class="summary-file-name">${f.name}</span>
+        <span class="summary-file-size">${formatBytes(f.size)}</span>`;
+      D.summaryList.appendChild(row);
+    });
+  }
+
+  function attachLoupe(wrap, thumbUrl, nativeW, nativeH) {
+    const circle = wrap.querySelector('.qc-loupe-circle');
+    if (!circle) return;
+    const zoom = 3;
+    circle.style.backgroundImage = `url('${thumbUrl}')`;
+    wrap.addEventListener('mousemove', e => {
+      const rect = wrap.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const px = x / rect.width, py = y / rect.height;
+      const bsW = rect.width * zoom, bsH = rect.height * zoom;
+      const bpX = px * (bsW - 72) * -1;
+      const bpY = py * (bsH - 72) * -1;
+      circle.style.backgroundSize = `${bsW}px ${bsH}px`;
+      circle.style.backgroundPosition = `${bpX}px ${bpY}px`;
+      circle.style.left = x + 'px';
+      circle.style.top  = y + 'px';
+    });
+  }
+
+  function renderQC() {
+    D.summaryList.innerHTML = '';
+    const arrowSvg = `<svg class="qc-arrow-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`;
+
+    stats.fileResults.forEach((f, idx) => {
+      const savPct = f.origSize > 0
+        ? Math.round((1 - f.size / f.origSize) * 100) : 0;
+      const savedClass = savPct > 0 ? 'saved' : '';
+      const savLabel = savPct > 0 ? `-${savPct}%` : '~0%';
+
+      const row = document.createElement('div');
+      row.className = 'qc-row';
+      row.dataset.idx = idx;
+
+      row.innerHTML = `
+        <div class="qc-thumb-block">
+          <div class="qc-thumb-label">GỐC</div>
+          <div class="qc-thumb-wrap qc-orig" data-src="${f.origThumb || ''}">
+            <div class="qc-thumb-placeholder"></div>
+          </div>
+          <div class="qc-thumb-size">${formatBytes(f.origSize || 0)}</div>
+        </div>
+        <div class="qc-arrow-col">
+          ${arrowSvg}
+          <span class="qc-savings-pct ${savPct === 0 ? 'neutral' : ''}">${savLabel}</span>
+        </div>
+        <div class="qc-thumb-block">
+          <div class="qc-thumb-label">KẾT QUẢ</div>
+          <div class="qc-thumb-wrap qc-proc" data-src="${f.procThumb || ''}">
+            <div class="qc-thumb-placeholder"></div>
+            <div class="qc-loupe-circle"></div>
+          </div>
+          <div class="qc-thumb-size ${savedClass}">${formatBytes(f.size)}</div>
+        </div>`;
+
+      D.summaryList.appendChild(row);
+    });
+
+    // Lazy load images via IntersectionObserver
+    if (qcObserver) qcObserver.disconnect();
+    qcObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const row = entry.target;
+        const idx = parseInt(row.dataset.idx);
+        const f = stats.fileResults[idx];
+
+        ['.qc-orig', '.qc-proc'].forEach((sel, i) => {
+          const wrap = row.querySelector(sel);
+          if (!wrap || wrap.dataset.loaded) return;
+          wrap.dataset.loaded = '1';
+          const src = wrap.dataset.src;
+          if (!src) return;
+          const placeholder = wrap.querySelector('.qc-thumb-placeholder');
+          const img = document.createElement('img');
+          img.onload = () => { if (placeholder) placeholder.remove(); };
+          img.src = src;
+          wrap.insertBefore(img, wrap.firstChild);
+          if (i === 1) attachLoupe(wrap, src);
+        });
+
+        qcObserver.unobserve(row);
+      });
+    }, { root: D.summaryList, rootMargin: '80px', threshold: 0 });
+
+    D.summaryList.querySelectorAll('.qc-row').forEach(r => qcObserver.observe(r));
+  }
+
+  function setView(view) {
+    currentView = view;
+    D.btnViewList.classList.toggle('active', view === 'list');
+    D.btnViewQc.classList.toggle('active', view === 'qc');
+    if (view === 'list') renderList(); else renderQC();
+  }
+
+  D.btnViewList.onclick = () => setView('list');
+  D.btnViewQc.onclick   = () => setView('qc');
+
+  renderList(); // default
 
   state.pendingZipBlob     = stats.zipBlob;
   state.pendingZipFilename = stats.zipFilename;
@@ -2384,7 +2624,20 @@ async function exportAll() {
     );
 
     finalBytes += blob.size;
-    fileResults.push({ name: img.name + ext, status: 'ok', size: blob.size });
+
+    // Capture 150px thumbnails for QC view
+    const THUMB_W = 150;
+    function makeThumb(src, w) {
+      const s = w / src.width;
+      const tc = document.createElement('canvas');
+      tc.width = w; tc.height = Math.round(src.height * s);
+      tc.getContext('2d').drawImage(src, 0, 0, tc.width, tc.height);
+      return tc.toDataURL('image/jpeg', 0.72);
+    }
+    const origThumb = makeThumb(img.bitmap, Math.min(THUMB_W, img.bitmap.width));
+    const procThumb = makeThumb(canvas, Math.min(THUMB_W, canvas.width));
+
+    fileResults.push({ name: img.name + ext, status: 'ok', size: blob.size, origSize: img.file.size, origThumb, procThumb });
 
     const pattern = state.exportSettings.pattern
       .replace('{original}', img.name)
